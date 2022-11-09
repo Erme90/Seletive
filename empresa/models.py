@@ -25,6 +25,9 @@ class Empresa(models.Model):
     def __str__(self):
         return self.nome
 
+    def qtd_vagas(self):
+        return Vagas.objects.filter(empresa__id=self.id).count()
+
 class Vagas(models.Model):
     choices_experiencia = (
         ('J', 'Júnior'),
@@ -46,7 +49,7 @@ class Vagas(models.Model):
     data_final = models.DateField()
     status = models.CharField(max_length=30, choices=choices_status)
     tecnologias_dominadas = models.ManyToManyField(Tecnologias)
-    tecnologias_estudar = models.ManyToManyField(Tecnologias, related_name='estudar')
+    tecnologias_estudar = models.ManyToManyField(Tecnologias, related_name='estudar', null=True)
 
 
     def __str__(self):
