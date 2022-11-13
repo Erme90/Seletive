@@ -50,7 +50,20 @@ class Vagas(models.Model):
     email = models.EmailField(null=True)
     status = models.CharField(max_length=30, choices=choices_status)
     tecnologias_dominadas = models.ManyToManyField(Tecnologias)
-    tecnologias_estudar = models.ManyToManyField(Tecnologias, related_name='estudar')
+    tecnologias_estudar = models.ManyToManyField(Tecnologias, related_name='estudar', blank=True)
+
+    def progresso(self):
+        if self.status == 'I':
+            return 20
+        elif self.status == 'C':
+            return 40
+        elif self.status == 'E':
+            return 60
+        elif self.status == 'D':
+            return 80
+        elif self.status == 'F':
+            return 100
+
 
 
     def __str__(self):
