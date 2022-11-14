@@ -10,6 +10,7 @@
 
     
     <br>
+   {{empresa_id}}
     <div class="container">
         {% if messages %}
             {% for message in messages %}
@@ -66,6 +67,10 @@
         <hr>
 
         <a data-bs-toggle="modal" data-bs-target="#exampleModal" class="btn btn-lg btn-orange">Nova vaga</a>
+        
+        
+        
+
 
         <div class="row">
             {% for vaga in vagas %}
@@ -73,7 +78,9 @@
 
     <div class="box-vagas">
         <div class="header-vagas">
-            <a href="{% url 'vaga' vaga.id %}">{{vaga.titulo}}</a>
+            <a class='btn btn-lg btn-primary' href="{% url 'vaga' vaga.id %}">{{vaga.titulo}}</a>
+            <a class="btn btn-lg btn-orange" href="{% url 'atualiza_vaga' vaga.id %}">Atualizar</a>
+           
         </div>
 
         <div class="body-vagas">
@@ -88,7 +95,7 @@
                     <label class="paragrafo">Status <img src="{% static 'empresa/img/green_flag.png' %}"></label>
                     <br>        
                     <label class="paragrafo paragrafo-orange">{{vaga.get_status_display}}</label>                           
-                </div>
+                </div> 
 
             </div>
         </div>

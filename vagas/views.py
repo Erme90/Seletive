@@ -4,6 +4,14 @@ from empresa.models import Vagas
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.messages import constants
+from .models import Tarefa,Emails
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
+
+
+
 
 def nova_vaga(request):
     if request.method == "POST":
@@ -38,6 +46,78 @@ def nova_vaga(request):
         raise Http404
 
 
+def atualiza_vaga(request,id):
+    vaga = get_object_or_404(Vagas, id=id)
+    return render(request,'vaga.html')
+
+
+
+
 def vaga(request,id):
     vaga = get_object_or_404(Vagas, id=id)
-    return render(request, 'vaga.html', {'vaga': vaga})
+    tarefas = Tarefa.objects.filter(vaga=vaga).filter(realizada=False)
+    emails = Emails.objects.filter(vaga = vaga)
+    return render(request, 'vaga.html', {'vaga': vaga, 
+                                        'tarefas': tarefas, 'emails':emails,})
+
+
+
+def realizar_tarefa(request,id):
+    tarefa_list = Tarefa.objects.filter(id=id).filter(realizada=False)
+    if not tarefa_list.exists():
+        messages.add_message(request, constants.ERROR, 'Realiza apenas uma tarefa válida')
+        return redirect ('/home/empresas')
+
+    tarefa = tarefa_list.first()
+    tarefa.realizada=True
+    tarefa.save()
+    messages.add_message(request, constants.SUCCESS, 'Tarefa realizada com sucesso! Parabéns!')
+    return redirect(f'/vagas/vaga/{tarefa.vaga.id}')
+   
+
+
+
+
+
+def nova_tarefa(request, id_vaga):
+    titulo = request.POST.get('titulo')
+    prioridade = request.POST.get("prioridade")
+    data = request.POST.get('data')
+    
+    tarefa = Tarefa(vaga_id=id_vaga,
+                    titulo=titulo,
+                    prioridade=prioridade,
+                    data=data)
+    tarefa.save()
+    messages.add_message(request, constants.SUCCESS, 'Tarefa criada com sucesso')
+    return redirect(f'/vagas/vaga/{id_vaga}')
+   
+
+
+
+def envia_email(request, id_vaga):
+    vaga = Vagas.objects.get(id=id_vaga)
+    assunto = request.POST.get('assunto')
+    corpo = request.POST.get('corpo')
+
+    html_content = render_to_string('emails/template_email.html', {'corpo': corpo})
+    text_content = strip_tags(html_content)
+    email = EmailMultiAlternatives(assunto, text_content, settings.EMAIL_HOST_USER, [vaga.email,])
+    email.attach_alternative(html_content, "text/html")
+
+    if email.send():
+        mail = Emails(
+            vaga=vaga,
+            assunto=assunto,
+            corpo = corpo,
+            enviado = True,
+        )
+        mail.save()
+
+
+        messages.add_message(request, constants.SUCCESS, 'email enviado com sucesso')
+        return redirect(f'/vagas/vaga/{id_vaga}')
+    else:
+        messages.add_message(request, constants.ERROR, 'Email NÃO enviado, tente mais tarde')
+
+    return HttpResponse(vaga)
